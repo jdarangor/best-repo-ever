@@ -6,3 +6,5 @@ They are either untracked, modified, staged, or committed.
 Git tracks these files, and keeps track of your history by organizing 
 your files and changes in three trees. 
 This is last line in first editing. 
+This site talks about Continous integration with Github
+https://circleci.com/blog/setting-up-continuous-integration-with-github/ 
