@@ -7,33 +7,23 @@ Declare PtrSafe Function HypMenuVRefresh Lib "HsAddin.dll" () As Long
 
 Sub Fedex_Data_0001()
 Attribute Fedex_Data_0001.VB_ProcData.VB_Invoke_Func = " \n14"
-
 '
 ' Fedex_Data Code by Jda
 '
-
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     Dim appAccess As Object
     Dim vrtCntry As Variant
     Dim arrTables As Variant
     
-    Dim X
-    Dim y
-    
-'auto    X = HypCreateConnection("Complete Data File", "3811756", "", "Analytic Services Provider", "http://prh01612.prod.fedex.com:19000/aps/SmartView", "PRH01617", "FinICE App", "FinICE", "FinICE Jda", "Connection Process")
-    
-'    y = HypConnect("EssBase", "3811756", "", "FinICE")
-    
     arrTables = BuildArray()
     
     Workbooks.Open Filename:=CurrentPath & "Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx"
-    
-'    Sheets(arrTables).Select Replace:=False
 '    Stop
     ThisWorkbook.Worksheets("Verification").Range("C6:AN6").Value = Workbooks("Jda Main Console File - Data Information.xlsm").Worksheets("Main Console").Range("g32")
     ThisWorkbook.Worksheets("Extraction").Range("F4:AQ4").Value = Workbooks("Jda Main Console File - Data Information.xlsm").Worksheets("Main Console").Range("g32")
-
+    
+    'Prepare file 0001-0003 to receive data
     Select Case Workbooks("Jda Main Console File - Data Information.xlsm").Worksheets("Main Console").Range("g30")
         Case "Verify"
             For Each vrtCntry In arrTables
@@ -43,22 +33,25 @@ Attribute Fedex_Data_0001.VB_ProcData.VB_Invoke_Func = " \n14"
         Case "Final Data"
             For Each vrtCntry In arrTables
                 Sheets(vrtCntry).Select
-                Columns("A:AZ").ClearContents
+                Columns("A:AQ").ClearContents
             Next
     End Select
     
     Sheets(arrTables(0)).Select
     Range("A1").Select
-'    Debug.Print "This workbook name = " & ThisWorkbook.Name, " Active Window Range = " & ActiveWindow.RangeSelection.Address
-
-'    MsgBox "Review that File Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx is opened."
+    
     Application.DisplayAlerts = False
     Application.ScreenUpdating = True
     
     'Run for each tab
-    'Stop
     For Each vrtCntry In arrTables
+        If (vrtCntry = "01 - CountryXPseudoXRegionTb") Then
+            Call RunAccessCPR_Qry
+            GoTo NoRtrival
+        End If
         Application.Run "'" & CurrentPath & "Jda 0001-0002-Complete Data File-Expenses.xlsm'!Fedex_Data.Fedex_Data_01", vrtCntry
+NoRtrival:
+
     Next
     
     Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Close True
@@ -97,16 +90,24 @@ Public Function BuildArray() As Variant
     
     Select Case strSelection
         Case "Verify"
-            'BuildArray = Array("01 - Countries-PseudosTb")
-            BuildArray = Array("01 - CountriesXAccounts G_LvlTb", "01 - CountriesXEntities MD_LvTb", "01 - Countries-PseudosTb", _
-                        "01 - Countries-RegionsTb")
+            BuildArray = Array("01 - CountriesXPseudosTb", "01 - CountriesXRegionsTb", "01 - CountryXPseudoXRegionTb")
         Case "Final Data"
             BuildArray = Array("02 Main DataTb")
             'BuildArray = Array("02 Expns_Colombia", "02 Expns_Venezuela")
     End Select
         
-        'BuildArray = Array("01 - 08 Weight_Verify", "01 - 07Volume_Verify", "01 - 06 FTEs_Verify", _
-                "01 - 05 Expenses_Verify", "01 - 04 Revenue _Verify", "01 - 03 Entity_Verify", _
-                "01 - 02 Region_Verify", "01 - 01 Pseudo_Verify")
-
 End Function
+
+Public Sub RunAccessCPR_Qry()
+    Dim dbAcc As Access.Application
+    
+    Set dbAcc = New Access.Application
+    dbAcc.OpenCurrentDatabase (ThisWorkbook.Path & "\BaseLevel Pulls Jda.accdb")
+    
+    dbAcc.DoCmd.OpenQuery "01 - CountriesXPseudosXRegions", acViewNormal, acEdit
+    
+    dbAcc.CloseCurrentDatabase
+    Set dbAcc = Nothing
+    
+End Sub
+

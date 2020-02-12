@@ -163,15 +163,15 @@ Attribute Fedex_Data_01.VB_ProcData.VB_Invoke_Func = " \n14"
     MsgBox "Make the connection and run the pull." & vbCr & vbCr & "REVIEW ZERO REPLACE", , ThisWorkbook.Name
 NoPullData:
 '    Stop
-    DoEvents
+    
     If Left(vrtCntry, 2) = "01" Then
         x = HypMenuVRefresh()
         Do While Range("c9").Value = ""
             'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
             'GoTo NoPullData
-            Debug.Print "No data retrieved, Smart View Return: " & x & " at " & Now
-            Sleep (5000)
+            Sleep (3000)
             Stop
+            Debug.Print "Refresh again at " & Now
             x = HypMenuVRefresh()
         Loop
     Else
@@ -179,27 +179,27 @@ NoPullData:
         Do While WorksheetFunction.CountIf(Range("f7:g3000"), "#Invalid") > 0
             'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
             'GoTo NoPullData
-            Debug.Print "No data retrieved, Smart View Return: " & x & " at " & Now
-            Sleep (5000)
+            Sleep (3000)
             Stop
+            Debug.Print "Refresh again at " & Now
             x = HypMenuVRefresh()
         Loop
-        Do While WorksheetFunction.Count(Range("f7:g3000")) = 0
+        Do While Range("F7").Value = ""
             'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
             'GoTo NoPullData
-            Debug.Print "No data retrieved, Smart View Return: " & x & " at " & Now
-            Sleep (5000)
+            Sleep (3000)
             Stop
+            Debug.Print "Again at " & Now
             x = HypMenuVRefresh()
         Loop
     End If
     
-    Sleep (55000)
     
 'auto        y = HypConnect("Complete Data File", "3811756", "", "FinICE Jda")
     Debug.Print "Connection result " & y
     'Debug.Assert y <> 0
-    
+    Sleep (55000)
+
         Application.StatusBar = "Pull called " & vrtCntry & " - at " & Now()
         Debug.Print "Pull called " & vrtCntry & " - at " & Now()
 '    Stop
@@ -229,8 +229,7 @@ NoPullData:
 
     If blnGraterThan20k Then
         Call RunGT20k(vrtCntry)
-        Windows("Jda 0001-0002-Complete Data File-Expenses.xlsm").Activate
-        Worksheets("DATA DETAILS").Delete
+        ThisWorkbook.Worksheets("DATA DETAILS").Delete
     End If
            
 End Sub
@@ -239,7 +238,7 @@ Sub RunGT20k(ByVal strCrrntExtractionTab As String)
 '    Stop
     Dim intRepStract As Integer
     Dim lngInitCell As Long
-    
+    Dim maindatalastcell As Long
     'assure init paste is less than 20001 rows
 '    Stop
     If FedexLastRow > 20000 Then
@@ -327,7 +326,7 @@ Sub RunGT20k(ByVal strCrrntExtractionTab As String)
         If InStr(strCrrntExtractionTab, "Entities") = 16 Then
             Range("c4:an4").Value = "Account"
         End If
-        MsgBox "Make the connection and run the pull.", , ThisWorkbook.Name
+'        MsgBox "Make the connection and run the pull.", , ThisWorkbook.Name
 '        Stop
         Dim x As Variant
         If Left(strCrrntExtractionTab, 2) = "01" Then
@@ -335,25 +334,23 @@ Sub RunGT20k(ByVal strCrrntExtractionTab As String)
             Do While Range("c9").Value = ""
                 'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
                 'GoTo NoPullData
-                Sleep (5000)
+                Sleep (55000)
                 Stop
-                Debug.Print "In loop " & Now()
-                x = HypMenuVRefresh()
             Loop
         Else
             x = HypMenuVRefresh()
             Do While WorksheetFunction.CountIf(Range("f7:g3000"), "#Invalid") > 0
                 'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
                 'GoTo NoPullData
-                Sleep (5000)
+                Sleep (55000)
                 Stop
                 Debug.Print "In loop " & Now()
                 x = HypMenuVRefresh()
             Loop
-            Do While WorksheetFunction.Count(Range("f7:g3000")) = 0
+            Do While Range("F7").Value = ""
                 'MsgBox "Please Refresh pull before continue!", , ThisWorkbook.Name
                 'GoTo NoPullData
-                Sleep (5000)
+                Sleep (55000)
                 Stop
                 Debug.Print "In loop " & Now()
                 x = HypMenuVRefresh()
@@ -361,7 +358,7 @@ Sub RunGT20k(ByVal strCrrntExtractionTab As String)
         End If
     
     'auto        y = HypConnect("Complete Data File", "3811756", "", "FinICE Jda")
-        Debug.Print "Data retrieved at: " & Now
+        Debug.Print "Connection result " & "review 'y' Declaration and update code next line Jda"
         ' Debug.Assert y <> 0
         
     'auto        x = HypMenuVRefresh()
@@ -399,42 +396,34 @@ Sub RunGT20k(ByVal strCrrntExtractionTab As String)
         Application.CutCopyMode = False
         
     Next
-        Dim maindatalastcell As Long
         
-        'Stop
+        'Dim maindatalastcell As Long
+        With ActiveSheet
+            maindatalastcell = .Cells(.Rows.Count, "A").End(xlUp).Row
+        End With
+        
+'        Stop
         If Left(strCrrntExtractionTab, 2) = "01" Then
             'Range("A" & (lngInitCell + 1)).Select
             Debug.Print "Review Heading for " & strCrrntExtractionTab & " Tab."
         Else
-        'Stop
-        
             Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Rows("2:4").Delete
-            Workbooks("Jda 0001-0001-Complete Data File-Program File.xlsm").Sheets("MainData Header").Range("A1:AT1").Copy
+            Workbooks("Jda 0001-0001-Complete Data File-Program File.xlsm").Sheets("MainData Header").Range("A1:Au1").Copy
             Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Range("A1").PasteSpecial
+            Workbooks("Jda 0001-0001-Complete Data File-Program File.xlsm").Sheets("MainData Header").Range("ar2:au2").Copy
             
             Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Activate
-            Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Save
-            
             With ActiveSheet
                 maindatalastcell = .Cells(.Rows.Count, "A").End(xlUp).Row
             End With
         
-            Workbooks("Jda 0001-0001-Complete Data File-Program File.xlsm").Sheets("MainData Header").Range("ar2:at2").Copy
-            Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Range("Ar2:AR" & maindatalastcell).Select
-            Selection.PasteSpecial Paste:=xlPasteAll, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
-            Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Save
-            
-            MsgBox "Copy LOG and Review next code. Jda", , ThisWorkbook.Name
-            Stop
-            'Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Range("Ar2:AT" & maindatalastcell).Copy
-            'range("ar2").select
-            'Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
-            
+            Workbooks("Jda 0001-0003-Complete Data File-All Countries-Expenses.xlsx").Sheets(strCrrntExtractionTab).Range("Ar2:AR" & maindatalastcell).PasteSpecial
+        
         End If
-        Application.StatusBar = "20k ended for " & strCrrntExtractionTab & " - at " & Now()
+        
+        Calculate
 
-        'Calculate
-            
+
 End Sub
 Sub Process_Upload_File()
 
