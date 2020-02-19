@@ -14,5 +14,4 @@ Sub RenameColumns(jdaTb as string)
         Debug.Print n
     Next
 
-
 End Sub
