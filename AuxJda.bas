@@ -127,10 +127,12 @@ Public Sub ReadSheetNames(intSheets As Integer)
        Debug.Print ActiveWorkbook.Sheets(i).Name
     Next
 End Sub
+
 Public Sub arraySheetNames() '(intSheets As Integer)
-    Dim i As Integer, intSheets As Integer, intProcGroups As Integer
+    Dim i As Integer, intSheets As Integer, intProcGroups As Integer, intGSize As Integer
     Dim strSheets As String
     
+    intGSize = 5
     intProcGroups = 0
     intSheets = ActiveWorkbook.Sheets.Count
     strSheets = "( "
@@ -138,8 +140,8 @@ Public Sub arraySheetNames() '(intSheets As Integer)
     
     For i = 1 To intSheets
         strSheets = strSheets + """" & ActiveWorkbook.Sheets(i).Name & """, "
-        If (i Mod 3 = 0 And intSheets > 3) Then
-            If intSheets - i < 1 And intSheets Mod 3 = 0 Then
+        If (i Mod intGSize = 0 And intSheets > intGSize) Then
+            If intSheets - i < 1 And intSheets Mod intGSize = 0 Then
                 Debug.Print Left(strSheets, Len(strSheets) - 2) & " )"
             Else
                 Debug.Print strSheets & " _"
@@ -150,7 +152,7 @@ Public Sub arraySheetNames() '(intSheets As Integer)
             End If
         Else
             
-            If (intSheets - i < 1 And ((intSheets - intProcGroups * 3) Mod 3 = intSheets Mod 3)) Then
+            If (intSheets - i < 1 And ((intSheets - intProcGroups * intGSize) Mod intGSize = intSheets Mod intGSize)) Then
                 Debug.Print Left(strSheets, Len(strSheets) - 2) & " )"
                 strSheets = ""
             End If
