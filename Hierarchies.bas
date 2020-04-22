@@ -1,6 +1,36 @@
 Attribute VB_Name = "Hierarchies"
 Option Explicit
 
+Public essBaseConn As Boolean
+Public essPass As String
+
+Sub Example_HypDisconnectAll()
+    Dim sts As Long
+    
+    sts = HypDisconnectAll()
+
+End Sub
+
+Sub Example_HypConnect()
+    Dim x As Long
+    
+    essBaseConn = False
+    
+    UserForm1.Show
+    Application.Cursor = xlWait
+    
+    x = HypConnect(Empty, "3811xyz", essPass, "xyz#####_XyzXYZ_Xyz_DB-JDA")
+'    Debug.Print "Connection result: " & x & " " & Now()
+    Application.Cursor = xlDefault
+    If x <> 0 Then
+        MsgBox "Please review you have your EssBase AddIn available", vbCritical, "Connection Result"
+        'essBaseConn = False
+    Else
+        essBaseConn = True
+    End If
+    
+End Sub
+
 Sub SpreadLevels()
     Dim i  As Long
     Dim strCol As String
@@ -234,3 +264,204 @@ Public Function ConvertTimeToDecimal(timeIn As Double) As Double
     ConvertTimeToDecimal = lngNatural + ((timeIn - lngNatural) / 6 * 10)
 End Function
 
+Sub ReviewDimMembers()
+    Dim cbItems As Long
+    Dim i As Long
+    Dim sts As Variant
+    Dim vt As Variant
+    Dim vtDims As Variant, vtDimNames As Variant
+    Dim vtMbrs As Variant, vtMbr As Variant
+    Dim strPreviousMemb As String
+    Dim wsCur As Worksheet
+    
+'    Call Example_HypConnect
+'    If Not essBaseConn Then
+'        Exit Sub
+'    End If
+' HypQueryMembers (vtSheetName, vtMemberName, vtPredicate, vtOption, vtDimensionName, vtInput1, vtInput2, vtMemberArray)
+' sts = HypQueryMembers(Empty, "Profit", HYP_CHILDREN, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Profit", HYP_DESCENDANTS, Empty, Empty, Empty,Empty, vArray)
+' sts = HypQueryMembers(Empty, "Profit", HYP_BOTTOMLEVEL, Empty, Empty, Empty,Empty, vArray)
+' sts = HypQueryMembers(Empty, "Sales", HYP_SIBLINGS, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Sales", HYP_SAMELEVEL, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Sales", HYP_SAMEGENERATION, Empty, Empty, Empty,Empty, vArray)
+' sts = HypQueryMembers(Empty, "Sales", HYP_PARENT, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Sales", HYP_DIMENSION, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Year", HYP_NAMEDGENERATION, Empty, "Year", "Quarter", Empty, vArray)
+' sts = HypQueryMembers(Empty, "Product", HYP_NAMEDLEVEL, Empty, "Product", "SKU",Empty, vArray)
+' sts = HypQueryMembers(Empty, "Product", HYP_SEARCH, HYP_ALIASESONLY, "Product","Cola", Empty, vArray)
+' sts = HypQueryMembers(Empty, "Year", HYP_WILDSEARCH, HYP_MEMBERSONLY, "Year","J*", Empty, vArray)
+' sts = HypQueryMembers(Empty, "Market", HYP_USERATTRIBUTE, Empty, "Market", "Major Market ", Empty, vArray)"
+' sts = HypQueryMembers(Empty, "Sales", HYP_ANCESTORS, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Jan", HYP_DTSMEMBER, Empty, Empty, Empty, Empty,vArray)
+' sts = HypQueryMembers(Empty, "Product", HYP_DIMUSERATTRIBUTES, Empty, Empty,Empty, Empty, vArray)
+
+' HypQueryMembers (vtSheetName, vtMemberName, vtPredicate, vtOption, vtDimensionName, vtInput1, vtInput2, vtMemberArray)
+    
+    Application.Cursor = xlWait
+    Set wsCur = Worksheets("Hrchy Chng Review")
+    
+    wsCur.Range("A8:F10000").Clear
+    ' worked sts = HypQueryMembers("Pull Members", "Fiscal Year", 2, Empty, "Fiscal Year", Empty, Empty, vt)
+    'retuns region 1.. descendants sts = HypQueryMembers("Pull Members", "1..", 2, Empty, "Region", Empty, Empty, vt)
+    'retuns region 2.. descendants
+    vtDims = Array(Array("1..", "2..", "R.."), _
+        Array("LATIN AM", "US DIV"), _
+        Array("LA Region", "US Region", "XXX"), _
+        Array("PeopleSoft LEE"), _
+        Array("L........."))
+    
+    vtDimNames = Array("Region", _
+         "Country", _
+         "Pseudo", _
+         "Account", _
+         "Entity")
+    
+    Dim o As Integer
+    o = 0
+    For Each vtMbrs In vtDims
+        
+        wsCur.Cells(8, 1 + o).Select
+        
+        For Each vtMbr In vtMbrs
+            sts = HypQueryMembers("Hrchy Chng Review", vtMbr, 2, Empty, vtDimNames(o), Empty, Empty, vt)
+            
+            If IsArray(vt) Then
+                cbItems = UBound(vt) + 1
+                'msgbox ("Number of elements for member '" & vtMbr & "' = " + Str(cbItems))
+                
+                'Debug.Print "Member = " & vtMbr
+                ActiveCell.Value = "'" & vtMbr
+                ActiveCell.Offset(1, 0).Activate
+                
+            If strPreviousMemb <> vt(0) Then
+                For i = 0 To UBound(vt)
+                    'MsgBox ("Member = " + vt(i))
+                    'Debug.Print "Member = " + vt(i)
+                    ActiveCell.Value = "'" & vt(i)
+                    ActiveCell.Offset(1, 0).Activate
+                    strPreviousMemb = vt(0)
+                Next
+            End If
+            Else
+            
+                MsgBox ("Return Value = " + Str(vt))
+            
+            End If
+        Next
+        
+        o = o + 1
+    Next
+    
+'    Call Example_HypDisconnectAll
+    
+    wsCur.Range("A8").Select
+    Application.Cursor = xlDefault
+    
+    If Range("G5") <> 0 Or Range("H5") <> 0 Or Range("I5") <> 0 Or Range("J5") <> 0 Or Range("K5") <> 0 Then
+        MsgBox "Please recreate the hierarchies, there is one or more changes.", vbCritical, "FedEx Hierarchies Review."
+    Else
+        MsgBox "Review has been completed", vbInformation, "FedEx Hierarchies Review."
+    End If
+    
+    Set wsCur = Nothing
+    
+    'test=array(1,2,3)
+    'Range("T1:T3") = WorksheetFunction.Transpose(test)
+
+End Sub
+
+
+
+Sub ReviewAccountMembers()
+    Dim cbItems As Long
+    Dim i As Long
+    Dim sts As Variant
+    Dim vt As Variant
+    Dim vtDims As Variant, vtDimNames As Variant
+    Dim vtMbrs As Variant, vtMbr As Variant
+    Dim strPreviousMemb As String
+    Dim wsCur As Worksheet
+    
+' HypQueryMembers (vtSheetName, vtMemberName, vtPredicate, vtOption, vtDimensionName, vtInput1, vtInput2, vtMemberArray)
+    
+    Application.Cursor = xlWait
+    Set wsCur = Worksheets("Hrchy Chng Review")
+    
+    wsCur.Range("D8:D10000").Clear
+    ' worked sts = HypQueryMembers("Pull Members", "Fiscal Year", 2, Empty, "Fiscal Year", Empty, Empty, vt)
+    'retuns region 1.. descendants sts = HypQueryMembers("Pull Members", "1..", 2, Empty, "Region", Empty, Empty, vt)
+    'retuns region 2.. descendants
+    vtDims = Array( _
+        Array("PeopleSoft LEE"))
+    
+    vtDimNames = Array( _
+         "Account")
+    
+    Dim o As Integer
+    o = 0
+    For Each vtMbrs In vtDims
+        
+        wsCur.Cells(8, 4 + o).Select ' 8 row 4 col (4 + 0)
+        
+        For Each vtMbr In vtMbrs
+            sts = HypQueryMembers("Hrchy Chng Review", vtMbr, 2, Empty, vtDimNames(o), Empty, Empty, vt)
+            
+            If IsArray(vt) Then
+                cbItems = UBound(vt) + 1
+                'msgbox ("Number of elements for member '" & vtMbr & "' = " + Str(cbItems))
+                
+                'Debug.Print "Member = " & vtMbr
+                ActiveCell.Value = "'" & vtMbr
+                ActiveCell.Offset(1, 0).Activate
+                
+            If strPreviousMemb <> vt(0) Then
+                For i = 0 To UBound(vt)
+                    'MsgBox ("Member = " + vt(i))
+                    'Debug.Print "Member = " + vt(i)
+                    ActiveCell.Value = "'" & vt(i)
+                    ActiveCell.Offset(1, 0).Activate
+                    strPreviousMemb = vt(0)
+                Next
+            End If
+            Else
+            
+                MsgBox ("Return Value = " + Str(vt))
+            
+            End If
+        Next
+        
+        o = o + 1
+    Next
+    
+'    Call Example_HypDisconnectAll
+    
+    wsCur.Range("A8").Select
+    Application.Cursor = xlDefault
+    
+    If Range("G5") <> 0 Or Range("H5") <> 0 Or Range("I5") <> 0 Or Range("J5") <> 0 Or Range("K5") <> 0 Then
+        MsgBox "Please recreate the hierarchies, there is one or more changes.", vbCritical, "FedEx Hierarchies Review."
+    Else
+        MsgBox "Review has been completed", vbInformation, "FedEx Hierarchies Review."
+    End If
+    
+    Set wsCur = Nothing
+    
+    'test=array(1,2,3)
+    'Range("T1:T3") = WorksheetFunction.Transpose(test)
+
+End Sub
+
+Sub apostrophe()
+Dim i As Integer: i = 0
+
+Range("a8").Select
+
+Do While ActiveCell.Value <> ""
+    ActiveCell.Value = "'" & ActiveCell.Value
+    ActiveCell.Offset(1, 0).Select
+    i = i + 1
+    If i > 10000 Then GoTo jdaSalida
+Loop
+jdaSalida:
+End Sub
